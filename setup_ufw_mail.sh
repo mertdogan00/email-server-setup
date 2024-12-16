@@ -40,6 +40,9 @@ ufw allow 143    # IMAP port 143
 echo "Allowing IMAPS port (993)..."
 ufw allow 993    # IMAPS port 993 (SSL/TLS)
 
+echo "Allowing Sieve port (4190)..."
+ufw allow 4190    # Sieve port 4190 (ManageSieve)
+
 # 4. Enable UFW
 echo "Enabling UFW..."
 ufw --force enable   # Enable UFW without asking for confirmation
