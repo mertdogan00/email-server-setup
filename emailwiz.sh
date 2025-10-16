@@ -19,10 +19,16 @@ umask 0022
 
 install_packages="postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host"
 
-systemctl -q stop dovecot
-systemctl -q stop postfix
-apt-get purge ?config-files -y $install_packages
-apt-get install -y $install_packages
+systemctl -q stop dovecot || true
+systemctl -q stop postfix || true
+
+# Mevcut paketleri tamamen kaldır (config dosyalarıyla birlikte)
+apt-get purge --auto-remove --yes --allow-change-held-packages --purge $install_packages
+
+apt-get update
+
+# Paketleri Bookworm önceliğiyle (priority dosyasına göre) kur
+apt-get install -y --allow-downgrades $install_packages
 
 domain="$(cat /etc/mailname)"
 subdom=${MAIL_SUBDOM:-mail}
@@ -160,7 +166,7 @@ postconf -e 'smtpd_sasl_path = private/auth'
 
 # helo, sender, relay and recipient restrictions
 postconf -e "smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre"
-postconf -e 'smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain'
+postconf -e 'smtpd_sender_restrictions = reject_sender_login_mismatch, permit_sasl_authenticated, permit_mynetworks, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain'
 postconf -e 'smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain'
 postconf -e 'smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination'
 postconf -e 'smtpd_helo_required = yes'
